@@ -102,13 +102,7 @@ class Beam:
         self.rct.left = bird.rct.right
         self.vx, self.vy = +5, 0
     
-    #     self.img = pg.画像のロード(f"fig/beam.png")
-    #     self.rct = self.img.Rectの取得()
-    #     self.ビームの中心縦座標 = こうかとんの中心縦座標
-    #     self.ビームの左座標 = こうかとんの右座標
-    #     self.vx, self.vy = +5, 0
-
-    # def update(self, screen: pg.Surface):
+    
     def update(self, screen: pg.Surface):
 
     #     ビームを速度ベクトルself.vx, self.vyに基づき移動させる
