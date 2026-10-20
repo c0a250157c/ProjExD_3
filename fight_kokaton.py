@@ -171,6 +171,26 @@ class Score:
         self.img = self.fonto.render(str(self.score), 0, self.color)
         screen.blit(self.img, self.rct)
 
+class Explosion:
+    def __init__(self, xy: tuple[int, int]):
+        """
+        爆発画像,表示位置、表示時間を設定  引数 xyは爆発する場所
+        """
+        img = pg.image.load("fig/explosion.gif")
+        self.imgs = [img, pg.transform.flip(img, True, True)]
+        self.rct = img.get_rect()
+        self.rct.center = xy
+        self.life = 20
+
+    def update(self, screen: pg.Surface):
+        """
+        爆発時間を減らす
+        引数 screen　画面Surface
+        """
+        self.life -= 1 # 爆破経過時間１減算
+        if self.life > 0:
+            self.img = self.imgs[(self.life // 5) % 2]
+            screen.blit(self.img, self.rct)
 
 def main():
     pg.display.set_caption("たたかえ！こうかとん")
@@ -181,6 +201,7 @@ def main():
     #beam = None  # ゲーム初期化時にはビームは存在しない
     beams =[]
     score = Score()
+    explosions = []
     clock = pg.time.Clock()
     tmr = 0
     while True:
@@ -204,12 +225,14 @@ def main():
                     return
 
                 for beam in beams:
-                    if beam is not None:
-                        if beam.rct.colliderect(bomb.rct):
-                            score.score += 1
-                            bombs[bombs.index(bomb)] = None
-                            beams[beams.index(beam)] = None #リストにする
-        
+                    if bomb is not None and beam is not None:
+                       if beam is not None:
+                           if beam.rct.colliderect(bomb.rct):
+                              explosions.append(Explosion(bomb.rct.center))
+                              score.score += 1
+                              bombs[bombs.index(bomb)] = None
+                              beams[beams.index(beam)] = None #リストにする
+                              bomb = None # 爆弾が複数あったっても落ちない　　
 
         bombs = [bomb for bomb in bombs if bomb is not None]
 
@@ -223,6 +246,11 @@ def main():
         beams = [beam for beam in beams if check_bound(beam.rct) == (True, True)] #画面外のリストを削除
         for bomb in bombs:
             bomb.update(screen)
+            explosions = [explosion for explosion in explosions if explosion.life > 0]  # 0よりでかいインスタンスリスト
+
+
+        for explosion in explosions:
+            explosion.update(screen)
         score.update(screen)
         pg.display.update()
         tmr += 1
