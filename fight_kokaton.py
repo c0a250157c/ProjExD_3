@@ -171,13 +171,15 @@ class Score:
         self.img = self.fonto.render(str(self.score), 0, self.color)
         screen.blit(self.img, self.rct)
 
+
 def main():
     pg.display.set_caption("たたかえ！こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))    
     bg_img = pg.image.load("fig/pg_bg.jpg")
     bird = Bird((300, 200))
     bombs = [Bomb((255, 0, 0), 10) for _ in range(NUM_OF_BOMBS)]
-    beam = None  # ゲーム初期化時にはビームは存在しない
+    #beam = None  # ゲーム初期化時にはビームは存在しない
+    beams =[]
     score = Score()
     clock = pg.time.Clock()
     tmr = 0
@@ -187,30 +189,38 @@ def main():
                 return
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
             #     # スペースキー押下でBeamクラスのインスタンス生成
-                 beam = Beam(bird)            
+                beams.append(Beam(bird) ) #追加           
         screen.blit(bg_img, [0, 0])
-        for bomb in bombs:
-            if bird.rct.colliderect(bomb.rct):
-                bird.change_img(8, screen)
-                fonto = pg.font.Font(None, 80)
-                txt = fonto.render("Game Over", True, (255, 0, 0))
-                screen.blit(txt, [WIDTH//2-150, HEIGHT//2])
-                pg.display.update()
-                time.sleep(3)
-                return
 
-            if beam is not None:
-                if beam.rct.colliderect(bomb.rct):
-                    score.score += 1
-                    bombs[bombs.index(bomb)] = None
-                    beam = None
+        for bomb in bombs:
+            if bomb is not None:
+                if bird.rct.colliderect(bomb.rct):
+                    bird.change_img(8, screen)
+                    fonto = pg.font.Font(None, 80)
+                    txt = fonto.render("Game Over", True, (255, 0, 0))
+                    screen.blit(txt, [WIDTH//2-150, HEIGHT//2])
+                    pg.display.update()
+                    time.sleep(3)
+                    return
+
+                for beam in beams:
+                    if beam is not None:
+                        if beam.rct.colliderect(bomb.rct):
+                            score.score += 1
+                            bombs[bombs.index(bomb)] = None
+                            beams[beams.index(beam)] = None #リストにする
+        
 
         bombs = [bomb for bomb in bombs if bomb is not None]
 
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
-        if beam is not None:
-           beam.update(screen) 
+        for beam in beams:
+            if beam is not None:
+                beam.update(screen)
+        bombs = [bomb for bomb in bombs if bomb is not None]
+        beams = [beam for beam in beams if beam is not None] # マルチビームの処理
+        beams = [beam for beam in beams if check_bound(beam.rct) == (True, True)] #画面外のリストを削除
         for bomb in bombs:
             bomb.update(screen)
         score.update(screen)
